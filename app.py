@@ -201,8 +201,6 @@ def _build_payload(proband_age, proband_sex, selected_conditions):
 
 def _render_summary(result: dict):
     summary = result["summary"]
-    alerts = result["red_flag_alerts"]
-
     h = summary["high_priority_count"]
     m = summary["medium_priority_count"]
     lo = summary["low_priority_count"]
@@ -736,7 +734,6 @@ def main():
                 st.divider()
             st.markdown("#### Cancer Risk (NCCN Rule-Based Assessment)")
             cancer_cols = st.columns(min(len(cancer_conditions), 3))
-            all_alerts = result["red_flag_alerts"]
             for idx, (cond_name, cdata) in enumerate(cancer_conditions.items()):
                 with cancer_cols[idx % len(cancer_cols)]:
                     flags = cdata.get("cancer_flags", [])
