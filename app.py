@@ -567,15 +567,130 @@ def main():
     result = st.session_state.result
 
     if result is None:
+        st.markdown("### How to use")
         st.markdown(
             """
-            ### How to use
-            1. Enter **your age and sex** in the sidebar.
-            2. Select the **conditions** you want to analyse.
-            3. Click **+ Add family member** and fill in each relative's details.
-            4. Click **Analyse Family History** to see your risk dashboard.
+            1. Enter **your age and biological sex** in the sidebar.
+            2. Select the **conditions** you want to analyse (e.g. diabetes, heart disease, breast cancer).
+            3. Click **+ Add family member** for each relative you have health information about.
+            4. Fill in their relationship, sex, condition, age of onset — then click **+ Add** to save it.
+            5. Click **Analyse Family History** to generate your risk dashboard.
             """
         )
+
+        st.divider()
+        st.markdown("### What you'll see")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(
+                """
+                **Risk Gauges**
+                Semicircular meters showing your **Genetic score** and **Environmental score**
+                (each 0–100) plus the **Relative Risk Ratio (RR)** vs. the general population.
+                Cancer conditions show a rule-based flag card instead.
+                """
+            )
+        with col2:
+            st.markdown(
+                """
+                **Onset Trends**
+                A chart plotting the age each relative was diagnosed, across generations.
+                A downward slope means the condition is striking earlier each generation —
+                a key warning sign.
+                """
+            )
+        with col3:
+            st.markdown(
+                """
+                **Alerts tab**
+                Prioritized clinical alerts (High / Medium / Low) with specific recommended
+                actions such as genetic counselling or early screening.
+                """
+            )
+
+        st.divider()
+        st.markdown("### Example scenarios to try")
+
+        with st.expander("Scenario 1 — BRCA Cancer Risk (triggers HIGH priority alert)"):
+            st.markdown(
+                """
+                **Your info:** Age `32`, Sex `female`
+
+                **Conditions to select:** `breast_cancer`, `ovarian_cancer`, `diabetes`
+
+                | Member | Relationship | Sex | Condition | Age of Onset |
+                |---|---|---|---|---|
+                | Patricia | mother | female | breast_cancer | 44 |
+                | Susan | maternal_aunt | female | breast_cancer | 48 |
+                | Helen | maternal_grandmother | female | ovarian_cancer | 60 |
+
+                **Expected result:**
+                - 3 High-priority alerts (BRCA pattern: 2 breast cancer relatives under 50, plus ovarian cancer flag)
+                - Breast Cancer card shows **HIGH RISK** with the NCCN trigger reasons
+                - Ovarian Cancer card shows **HIGH RISK**
+                - Family tree shows red nodes on the maternal side
+                """
+            )
+
+        with st.expander("Scenario 2 — Early-Onset Heart Disease (CVD trend across generations)"):
+            st.markdown(
+                """
+                **Your info:** Age `38`, Sex `male`
+
+                **Conditions to select:** `heart_disease`, `hypertension`
+
+                | Member | Relationship | Sex | Condition | Age of Onset | Lifestyle flags |
+                |---|---|---|---|---|---|
+                | James | father | male | heart_disease | 48 | High_BP, Smoking |
+                | Robert | paternal_grandfather | male | heart_disease | 55 | — |
+                | Michael | paternal_uncle | male | heart_disease | 51 | — |
+
+                **Expected result:**
+                - Heart Disease RR ~3.0× (family history multiplier + early-onset penalty)
+                - Onset Trends chart shows a **downward slope** — disease appearing earlier each generation
+                - High-priority CVD alert with cardiology referral recommendation
+                """
+            )
+
+        with st.expander("Scenario 3 — Diabetes: Lifestyle vs Genetic split"):
+            st.markdown(
+                """
+                **Your info:** Age `45`, Sex `female`
+
+                **Conditions to select:** `diabetes`, `heart_disease`
+
+                | Member | Relationship | Sex | Condition | Age of Onset | Lifestyle flags |
+                |---|---|---|---|---|---|
+                | Linda | mother | female | diabetes | 52 | HighBP, HighChol |
+                | Dorothy | maternal_grandmother | female | diabetes | 60 | HighBP |
+                | Carol | sister | female | diabetes | 40 | HighBP, Smoker |
+
+                **Expected result:**
+                - Diabetes RR elevated (~2.3×)
+                - **Environmental score higher than Genetic score** — shared lifestyle factors explain
+                  most of the risk (all three relatives share High BP)
+                - Low-to-medium alert rather than high — lifestyle, not just genetics, is the driver
+                """
+            )
+
+        st.divider()
+        st.markdown("### Key terms")
+        terms = {
+            "Relative Risk Ratio (RR)": "Your estimated risk compared to the general population. RR 2.0 = twice the average risk. RR 1.0 = no elevation.",
+            "Genetic Score (0–100)": "How much of your elevated risk is explained by inherited factors, after removing the lifestyle contribution.",
+            "Environmental Score (0–100)": "How much of your elevated risk is explained by shared lifestyle factors (smoking, high BP, obesity, etc.) among affected relatives.",
+            "DPF Proxy": "Diabetes Pedigree Function — a hereditary diabetes score based on how many first and second-degree relatives have diabetes. Higher = more hereditary risk.",
+            "NCCN Red Flag": "A clinical criterion from the National Comprehensive Cancer Network guidelines. Triggering one means your family pattern matches a known hereditary cancer syndrome.",
+            "BRCA1/2": "Genes linked to hereditary breast and ovarian cancer. Flagged when 2+ relatives have breast cancer before age 50, or any relative has ovarian cancer.",
+            "First-degree relative": "Parent, sibling, or child — shares approximately 50% of your DNA.",
+            "Second-degree relative": "Grandparent, aunt, uncle — shares approximately 25% of your DNA.",
+            "Early-onset CVD": "Heart disease before age 55 in a male relative or age 65 in a female relative — a significant hereditary risk marker.",
+            "Genogram": "A clinical pedigree diagram showing family structure with health risk colour-coded on each member.",
+        }
+        for term, definition in terms.items():
+            st.markdown(f"**{term}** — {definition}")
+
         return
 
     # Summary row
