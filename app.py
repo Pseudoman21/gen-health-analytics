@@ -22,6 +22,17 @@ RELATIONSHIPS = [
     "grandfather", "grandmother", "uncle", "aunt",
     "great_uncle", "great_aunt", "first_cousin",
     "stepfather", "stepmother",
+    # Third generation (great-grandparents)
+    "paternal_great_grandfather", "paternal_great_grandmother",
+    "maternal_great_grandfather", "maternal_great_grandmother",
+    "great_grandfather", "great_grandmother",
+]
+
+ETHNICITIES = [
+    "not specified",
+    "ashkenazi_jewish",
+    "icelandic",
+    "other",
 ]
 
 CONDITIONS = [
@@ -47,6 +58,7 @@ DIABETES_FLAGS = [
 PRIORITY_COLOR = {"high": "#e63946", "medium": "#f4a261", "low": "#2a9d8f"}
 
 GENERATION_LABEL = {
+    -3: "Great-Grandparents",
     -2: "Grandparents",
     -1: "Parents / Aunts / Uncles",
      0: "You & Siblings",
@@ -74,6 +86,11 @@ def _render_sidebar():
     st.sidebar.subheader("Your Info (Proband)")
     proband_age = st.sidebar.number_input("Your age", min_value=1, max_value=120, value=34)
     proband_sex = st.sidebar.selectbox("Biological sex", ["female", "male", "other", "unknown"])
+    proband_ethnicity = st.sidebar.selectbox(
+        "Ancestry / ethnicity (optional)",
+        ETHNICITIES,
+        help="Some ancestries carry known genetic risk variants (e.g. BRCA founder mutations in Ashkenazi Jewish populations). Select if applicable.",
+    )
 
     st.sidebar.subheader("Conditions to Analyse")
     selected_conditions = st.sidebar.multiselect(
@@ -169,15 +186,15 @@ def _render_sidebar():
                 st.session_state.members.pop(i)
                 st.rerun()
 
-    return proband_age, proband_sex, selected_conditions
+    return proband_age, proband_sex, proband_ethnicity, selected_conditions
 
 
 # ---------------------------------------------------------------------------
 # Main — run analysis
 # ---------------------------------------------------------------------------
 
-def _build_payload(proband_age, proband_sex, selected_conditions):
-    return {
+def _build_payload(proband_age, proband_sex, proband_ethnicity, selected_conditions):
+    payload = {
         "proband_age": proband_age,
         "proband_sex": proband_sex,
         "conditions_of_interest": selected_conditions,
@@ -193,6 +210,9 @@ def _build_payload(proband_age, proband_sex, selected_conditions):
             for m in st.session_state.members
         ],
     }
+    if proband_ethnicity and proband_ethnicity != "not specified":
+        payload["proband_ethnicity"] = proband_ethnicity
+    return payload
 
 
 # ---------------------------------------------------------------------------
@@ -544,7 +564,7 @@ def main():
     )
     _init_state()
 
-    proband_age, proband_sex, selected_conditions = _render_sidebar()
+    proband_age, proband_sex, proband_ethnicity, selected_conditions = _render_sidebar()
 
     st.title("Gen-Health Analytics")
     st.caption("Hereditary Risk & Chronic Disease Predisposition Dashboard")
@@ -555,7 +575,7 @@ def main():
 
     col_run, _ = st.columns([2, 6])
     if col_run.button("Analyse Family History", type="primary"):
-        payload = _build_payload(proband_age, proband_sex, selected_conditions)
+        payload = _build_payload(proband_age, proband_sex, proband_ethnicity, selected_conditions)
         try:
             st.session_state.result = score(payload)
         except ValueError as e:

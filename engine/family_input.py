@@ -8,6 +8,7 @@ from engine.benchmarks import (
     RELATIONSHIP_TO_GENERATION,
     FIRST_DEGREE_RELATIONSHIPS,
     SECOND_DEGREE_RELATIONSHIPS,
+    THIRD_DEGREE_RELATIONSHIPS,
 )
 
 VALID_RELATIONSHIPS = set(RELATIONSHIP_TO_GENERATION.keys())
@@ -58,6 +59,7 @@ class FamilyInput:
     proband_sex: str
     conditions_of_interest: list[str]
     family_members: list[FamilyMember]
+    proband_ethnicity: Optional[str] = None   # e.g. "ashkenazi_jewish", "icelandic"
 
 
 # ---------------------------------------------------------------------------
@@ -185,11 +187,16 @@ def validate_and_parse(raw: dict) -> FamilyInput:
             )
         )
 
+    # Ethnicity (optional)
+    raw_ethnicity = raw.get("proband_ethnicity")
+    proband_ethnicity = str(raw_ethnicity).strip().lower().replace(" ", "_") if raw_ethnicity else None
+
     return FamilyInput(
         proband_age=proband_age,
         proband_sex=proband_sex,
         conditions_of_interest=conditions_of_interest,
         family_members=members,
+        proband_ethnicity=proband_ethnicity,
     )
 
 
@@ -210,12 +217,14 @@ def get_members_with_condition(
 
 
 def get_degree(relationship: str) -> str:
-    """Return 'first', 'second', or 'other' degree for a relationship string."""
+    """Return 'first', 'second', 'third', or 'other' degree for a relationship string."""
     rel = _normalize_relationship(relationship)
     if rel in FIRST_DEGREE_RELATIONSHIPS:
         return "first"
     if rel in SECOND_DEGREE_RELATIONSHIPS:
         return "second"
+    if rel in THIRD_DEGREE_RELATIONSHIPS:
+        return "third"
     return "other"
 
 
@@ -250,6 +259,8 @@ def estimate_dpf(family_input: FamilyInput) -> float:
             weighted_count += 1.0
         elif degree == "second":
             weighted_count += 0.5
+        elif degree == "third":
+            weighted_count += 0.25
 
     dpf_proxy = 0.20 + weighted_count * 0.15
     return max(0.078, min(2.42, dpf_proxy))

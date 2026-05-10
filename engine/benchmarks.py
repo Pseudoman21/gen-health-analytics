@@ -161,9 +161,29 @@ CANCER_RED_FLAG_RULES = {
 }
 
 # ---------------------------------------------------------------------------
+# Ethnicity-based cancer risk modifiers
+# Source: published literature — BRCA1/2 prevalence by ancestry group
+# Multipliers applied to NCCN flag count thresholds or alert priority escalation
+# ---------------------------------------------------------------------------
+# Ashkenazi Jewish BRCA1/2 prevalence: ~1/40 (~2.5%) vs general population ~1/400 (0.25%)
+# Source: Struewing et al. NEJM 1997; King et al. Science 2003
+ETHNICITY_CANCER_RISK_MODIFIERS = {
+    "ashkenazi_jewish": {
+        "conditions": ["breast_cancer", "ovarian_cancer", "male_breast_cancer"],
+        "brca_multiplier": 10.0,     # 10× higher BRCA1/2 carrier frequency
+        "note": "Ashkenazi Jewish ancestry — BRCA1/2 founder mutations (185delAG, 5382insC, 6174delT) confer ~10× higher carrier frequency vs general population",
+    },
+    "icelandic": {
+        "conditions": ["breast_cancer"],
+        "brca_multiplier": 4.0,
+        "note": "Icelandic ancestry — BRCA2 999del5 founder mutation",
+    },
+}
+
+# ---------------------------------------------------------------------------
 # Relationship to generation index mapping
 # Used to infer generation_index when not explicitly provided
-# Proband = 0, parents = -1, grandparents = -2, children = +1
+# Proband = 0, parents = -1, grandparents = -2, great-grandparents = -3, children = +1
 # ---------------------------------------------------------------------------
 RELATIONSHIP_TO_GENERATION = {
     # Generation -1 (parents)
@@ -171,7 +191,7 @@ RELATIONSHIP_TO_GENERATION = {
     "mother":           -1,
     "stepfather":       -1,
     "stepmother":       -1,
-    # Generation -1.5 mapped to -1 (aunts/uncles are siblings of parents)
+    # Generation -1 (aunts/uncles are siblings of parents)
     "paternal_uncle":   -1,
     "paternal_aunt":    -1,
     "maternal_uncle":   -1,
@@ -201,6 +221,13 @@ RELATIONSHIP_TO_GENERATION = {
     "great_aunt":       -2,
     # First cousin — approximated to parent generation for regression purposes
     "first_cousin":     -1,
+    # Generation -3 (great-grandparents)
+    "paternal_great_grandfather": -3,
+    "paternal_great_grandmother": -3,
+    "maternal_great_grandfather": -3,
+    "maternal_great_grandmother": -3,
+    "great_grandfather":          -3,
+    "great_grandmother":          -3,
 }
 
 # Degree of relationship classification
@@ -218,6 +245,12 @@ SECOND_DEGREE_RELATIONSHIPS = {
     "uncle", "aunt",
     "first_cousin",
     "great_uncle", "great_aunt",
+}
+
+THIRD_DEGREE_RELATIONSHIPS = {
+    "paternal_great_grandfather", "paternal_great_grandmother",
+    "maternal_great_grandfather", "maternal_great_grandmother",
+    "great_grandfather", "great_grandmother",
 }
 
 # ---------------------------------------------------------------------------

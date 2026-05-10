@@ -17,6 +17,7 @@ from engine.benchmarks import (
     DIABETES_DPF_RISK_BANDS,
     POPULATION_BASE_RATES,
     CLINICAL_THRESHOLDS,
+    ETHNICITY_CANCER_RISK_MODIFIERS,
 )
 
 
@@ -27,9 +28,24 @@ from engine.benchmarks import (
 def detect_cancer_flags(family_input: FamilyInput) -> list[dict]:
     """
     Apply NCCN red flag rules to the family input.
-    Returns a list of triggered alert dicts.
+    Ethnicity modifiers (e.g. Ashkenazi Jewish BRCA founder mutations) are appended
+    as additional alerts when the proband's ancestry is a known high-risk group.
     """
     triggered = []
+
+    # Ethnicity-based flag (independent of family member count)
+    ethnicity = family_input.proband_ethnicity
+    if ethnicity and ethnicity in ETHNICITY_CANCER_RISK_MODIFIERS:
+        mod = ETHNICITY_CANCER_RISK_MODIFIERS[ethnicity]
+        triggered.append({
+            "category": "ethnicity",
+            "condition": mod["conditions"][0],
+            "priority": "high",
+            "trigger_reason": mod["note"],
+            "matched_relatives_count": 0,
+            "matched_relatives": [],
+            "ethnicity_modifier": mod["brca_multiplier"],
+        })
 
     for category, ruleset in CANCER_RED_FLAG_RULES.items():
         condition_names = ruleset["condition_names"]
