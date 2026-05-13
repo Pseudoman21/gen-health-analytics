@@ -17,15 +17,14 @@ RELATIONSHIPS = [
     "maternal_grandfather", "maternal_grandmother",
     "paternal_uncle", "paternal_aunt",
     "maternal_uncle", "maternal_aunt",
-    "son", "daughter", "sibling",
+    "son", "daughter",
     "half_brother", "half_sister",
-    "grandfather", "grandmother", "uncle", "aunt",
+    "grandfather", "grandmother",
     "great_uncle", "great_aunt", "first_cousin",
     "stepfather", "stepmother",
     # Third generation (great-grandparents)
     "paternal_great_grandfather", "paternal_great_grandmother",
     "maternal_great_grandfather", "maternal_great_grandmother",
-    "great_grandfather", "great_grandmother",
 ]
 
 ETHNICITIES = [
@@ -54,6 +53,24 @@ DIABETES_FLAGS = [
     "HighBP", "HighChol", "Smoker",
     "PhysInactivity", "HvyAlcoholConsump",
 ]
+
+RELATIONSHIP_SEX = {
+    "father": "male",            "mother": "female",
+    "brother": "male",           "sister": "female",
+    "paternal_grandfather": "male",  "paternal_grandmother": "female",
+    "maternal_grandfather": "male",  "maternal_grandmother": "female",
+    "paternal_uncle": "male",    "paternal_aunt": "female",
+    "maternal_uncle": "male",    "maternal_aunt": "female",
+    "son": "male",               "daughter": "female",
+    "half_brother": "male",      "half_sister": "female",
+    "grandfather": "male",       "grandmother": "female",
+    "uncle": "male",             "aunt": "female",
+    "great_uncle": "male",       "great_aunt": "female",
+    "stepfather": "male",        "stepmother": "female",
+    "paternal_great_grandfather": "male",  "paternal_great_grandmother": "female",
+    "maternal_great_grandfather": "male",  "maternal_great_grandmother": "female",
+    "great_grandfather": "male", "great_grandmother": "female",
+}
 
 PRIORITY_COLOR = {"high": "#e63946", "medium": "#f4a261", "low": "#2a9d8f"}
 
@@ -119,18 +136,25 @@ def _render_sidebar():
             f"{member.get('name') or member['relationship']}"
             + (f" — {cond_summary}" if cond_summary else "")
         )
-        with st.sidebar.expander(f"Member {i + 1}: {expander_label}", expanded=False):
+        with st.sidebar.expander(f"Member {i + 1}: {expander_label}", expanded=False, key=f"exp_{i}"):
             member["name"] = st.text_input("Name (optional)", value=member["name"], key=f"name_{i}")
             member["relationship"] = st.selectbox(
                 "Relationship", RELATIONSHIPS,
                 index=RELATIONSHIPS.index(member["relationship"]) if member["relationship"] in RELATIONSHIPS else 0,
                 key=f"rel_{i}",
             )
+
+            inferred_sex = RELATIONSHIP_SEX.get(member["relationship"])
+            if inferred_sex:
+                member["sex"] = inferred_sex
+                st.session_state[f"sex_{i}"] = inferred_sex
+
             col_sex, col_dec = st.columns(2)
             member["sex"] = col_sex.selectbox(
                 "Sex", ["male", "female", "other", "unknown"],
                 index=["male", "female", "other", "unknown"].index(member["sex"]),
                 key=f"sex_{i}",
+                disabled=inferred_sex is not None,
             )
             member["is_deceased"] = col_dec.checkbox("Deceased", value=member["is_deceased"], key=f"dec_{i}")
 
